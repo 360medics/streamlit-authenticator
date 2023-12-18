@@ -4,17 +4,18 @@ import bcrypt
 import extra_streamlit_components as stx
 import jwt
 import streamlit as st
-from exceptions import (
+from loguru import logger
+
+from .exceptions import (
     CredentialsError,
     ForgotError,
     RegisterError,
     ResetError,
     UpdateError,
 )
-from hasher import Hasher
-from loguru import logger
-from utils import generate_random_pw
-from validator import Validator
+from .hasher import Hasher
+from .utils import generate_random_pw
+from .validator import Validator
 
 
 class Authenticate:

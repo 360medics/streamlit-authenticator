@@ -1,7 +1,8 @@
 import streamlit as st
 import yaml
-from authenticate import Authenticate
 from yaml.loader import SafeLoader
+
+from .authenticate import Authenticate
 
 _RELEASE = True
 
