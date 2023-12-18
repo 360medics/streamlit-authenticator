@@ -12,6 +12,10 @@ credentials:
       email: jsmith@gmail.com
       name: John Smith
       password: $2b$12$veUHDUOxMPpYTgIivZbUqufvgGlv3zX5uZ5np7dmGdmtOB0Z1e2q6
+    loulou:
+      email: loulou.gaming@provider.com
+      name: louis gab
+      password: $2b$12$b5NHE9jyC3r5AdCjdW64KOuflyblrpNID8x5TQ5VXUcB5EI.iMEbi
     rbriggs:
       email: rbriggs@gmail.com
       name: Rebecca Briggs
@@ -23,3 +27,4 @@ credentials:
 preauthorized:
   emails:
   - melsby@gmail.com
+  - loulou.gaming@provider.com

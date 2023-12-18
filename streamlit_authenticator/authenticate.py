@@ -4,18 +4,17 @@ import bcrypt
 import extra_streamlit_components as stx
 import jwt
 import streamlit as st
-from loguru import logger
-
-from .exceptions import (
+from exceptions import (
     CredentialsError,
     ForgotError,
     RegisterError,
     ResetError,
     UpdateError,
 )
-from .hasher import Hasher
-from .utils import generate_random_pw
-from .validator import Validator
+from hasher import Hasher
+from loguru import logger
+from utils import generate_random_pw
+from validator import Validator
 
 
 class Authenticate:
@@ -150,7 +149,10 @@ class Authenticate:
                             st.session_state["username"] = self.token["username"]
                             st.session_state["authentication_status"] = True
 
-    def _check_credentials(self, inplace: bool = True) -> bool:
+    def _check_credentials(
+        self,
+        inplace: bool = True,
+    ) -> bool:
         """
         Checks the validity of the entered credentials.
 
@@ -196,7 +198,11 @@ class Authenticate:
             else:
                 return False
 
-    def login(self, form_name: str, location: str = "main") -> tuple:
+    def login(
+        self,
+        form_name: str = "Connexion",
+        location: str = "main",
+    ) -> tuple:
         """
         Creates a login widget.
 
@@ -222,16 +228,24 @@ class Authenticate:
             self._check_cookie()
             if not st.session_state["authentication_status"]:
                 if location == "main":
-                    login_form = st.form("Login")
+                    login_form = st.form("Connexion")
                 elif location == "sidebar":
-                    login_form = st.sidebar.form("Login")
+                    login_form = st.sidebar.form("Connexion")
 
                 login_form.subheader(form_name)
-                self.username = login_form.text_input("Username").lower()
+                login_form.markdown(
+                    "*Pour vous connecter, vous devez avoir créé un compte, et faire partie des utilisateurs autorisés.*"
+                )
+                self.username = login_form.text_input("Nom d'utilisateur")
                 st.session_state["username"] = self.username
-                self.password = login_form.text_input("Password", type="password")
+                self.password = login_form.text_input("Mot de passe", type="password")
 
-                if login_form.form_submit_button("Login"):
+                login_form.markdown(
+                    "Mot de passe/nom d'utilisateur oublié ? Complétez ce [formulaire](https://airtable.com/appW74yfcakhYbgsa/pag6Qvjdt8rlQRfx2/form)",
+                    unsafe_allow_html=True,
+                )
+
+                if login_form.form_submit_button("Se connecter"):
                     self._check_credentials()
 
         return (
@@ -240,7 +254,12 @@ class Authenticate:
             st.session_state["username"],
         )
 
-    def logout(self, button_name: str, location: str = "main", key: str = None):
+    def logout(
+        self,
+        button_name: str = "Déconnexion",
+        location: str = "main",
+        key: str = None,
+    ):
         """
         Creates a logout button.
 
@@ -268,7 +287,11 @@ class Authenticate:
                 st.session_state["username"] = None
                 st.session_state["authentication_status"] = None
 
-    def _update_password(self, username: str, password: str):
+    def _update_password(
+        self,
+        username: str,
+        password: str,
+    ):
         """
         Updates credentials dictionary with user's reset hashed password.
 
@@ -284,7 +307,10 @@ class Authenticate:
         ).generate()[0]
 
     def reset_password(
-        self, username: str, form_name: str, location: str = "main"
+        self,
+        username: str,
+        form_name: str = "Réinitialiser votre mot de passe",
+        location: str = "main",
     ) -> bool:
         """
         Creates a password reset widget.
@@ -305,21 +331,23 @@ class Authenticate:
         if location not in ["main", "sidebar"]:
             raise ValueError("Location must be one of 'main' or 'sidebar'")
         if location == "main":
-            reset_password_form = st.form("Reset password")
+            reset_password_form = st.form("Réinitialiser votre mot de passe")
         elif location == "sidebar":
-            reset_password_form = st.sidebar.form("Reset password")
+            reset_password_form = st.sidebar.form("Réinitialiser votre mot de passe")
 
         reset_password_form.subheader(form_name)
         self.username = username.lower()
         self.password = reset_password_form.text_input(
-            "Current password", type="password"
+            "Ancien mot de passe", type="password"
         )
-        new_password = reset_password_form.text_input("New password", type="password")
+        new_password = reset_password_form.text_input(
+            "Nouveau mot de passe", type="password"
+        )
         new_password_repeat = reset_password_form.text_input(
-            "Repeat password", type="password"
+            "Répétez votre nouveau mot de passe", type="password"
         )
 
-        if reset_password_form.form_submit_button("Reset"):
+        if reset_password_form.form_submit_button("Réinitialiser"):
             if self._check_credentials(inplace=False):
                 if len(new_password) > 0:
                     if new_password == new_password_repeat:
@@ -327,13 +355,17 @@ class Authenticate:
                             self._update_password(self.username, new_password)
                             return True
                         else:
-                            raise ResetError("New and current passwords are the same")
+                            raise ResetError(
+                                "Le nouveau et l'ancien mot de passe sont identiques"
+                            )
                     else:
-                        raise ResetError("Passwords do not match")
+                        raise ResetError(
+                            "Le nouveau et l'ancien mot de passe ne sont pas identiques"
+                        )
                 else:
-                    raise ResetError("No new password provided")
+                    raise ResetError("Vous n'avez pas fourni de nouveau mot de passe")
             else:
-                raise CredentialsError("password")
+                raise CredentialsError("Mot de passe")
 
     def _register_credentials(
         self,
@@ -377,7 +409,10 @@ class Authenticate:
             self.preauthorized["emails"].remove(email)
 
     def register_user(
-        self, form_name: str, location: str = "main", preauthorization=True
+        self,
+        form_name: str = "S'inscrire",
+        location: str = "main",
+        preauthorization=True,
     ) -> bool:
         """
         Creates a register new user widget.
@@ -403,30 +438,51 @@ class Authenticate:
         if location not in ["main", "sidebar"]:
             raise ValueError("Location must be one of 'main' or 'sidebar'")
         if location == "main":
-            register_user_form = st.form("Register user")
+            register_user_form = st.form("S'inscrire")
         elif location == "sidebar":
-            register_user_form = st.sidebar.form("Register user")
+            register_user_form = st.sidebar.form("S'inscrire")
 
         register_user_form.subheader(form_name)
-        new_email = register_user_form.text_input("Email")
-        new_username = register_user_form.text_input("Username").lower()
-        new_name = register_user_form.text_input("Name")
-        new_password = register_user_form.text_input("Password", type="password")
+        new_email = register_user_form.text_input(
+            "Email, utilisé pour l'inscription sur la liste d'attente"
+        )
+        new_username = register_user_form.text_input(
+            "Nom d'utilisateur, il vous servira pour vous connecter"
+        )
+        new_name = register_user_form.text_input("Prénom Nom")
+        new_password = register_user_form.text_input("Mot de passe", type="password")
         new_password_repeat = register_user_form.text_input(
-            "Repeat password", type="password"
+            "Confirmer le mot de passe", type="password"
+        )
+        cgu_accepted = register_user_form.checkbox(
+            "J'ai lu et j'accepte les [conditions générales d'utilisation](https://pulselife.com/fr-fr/legal/conditions-generales-d-utilisation).",
         )
 
-        if register_user_form.form_submit_button("Register"):
-            if (
-                len(new_email)
-                and len(new_username)
-                and len(new_name)
-                and len(new_password) > 0
-            ):
-                if new_username not in self.credentials["usernames"]:
-                    if new_password == new_password_repeat:
-                        if preauthorization:
-                            if new_email in self.preauthorized["emails"]:
+        if register_user_form.form_submit_button("S'inscrire"):
+            if cgu_accepted:
+                if (
+                    len(new_email)
+                    and len(new_username)
+                    and len(new_name)
+                    and len(new_password) > 0
+                ):
+                    if new_username not in self.credentials["usernames"]:
+                        if new_password == new_password_repeat:
+                            if preauthorization:
+                                if new_email in self.preauthorized["emails"]:
+                                    self._register_credentials(
+                                        new_username,
+                                        new_name,
+                                        new_password,
+                                        new_email,
+                                        preauthorization,
+                                    )
+                                    return True
+                                else:
+                                    raise RegisterError(
+                                        "L'utilisateur n'est pas préautorisé à s'inscrire."
+                                    )
+                            else:
                                 self._register_credentials(
                                     new_username,
                                     new_name,
@@ -435,26 +491,19 @@ class Authenticate:
                                     preauthorization,
                                 )
                                 return True
-                            else:
-                                raise RegisterError(
-                                    "User not preauthorized to register"
-                                )
                         else:
-                            self._register_credentials(
-                                new_username,
-                                new_name,
-                                new_password,
-                                new_email,
-                                preauthorization,
+                            raise RegisterError(
+                                "Les mots de passe ne correspondent pas."
                             )
-                            return True
                     else:
-                        raise RegisterError("Passwords do not match")
+                        raise RegisterError("Nom d’utilisateur déjà utilisé")
                 else:
-                    raise RegisterError("Username already taken")
+                    raise RegisterError(
+                        "Veuillez entrer une adresse e-mail, un nom d'utilisateur, un nom et un mot de passe."
+                    )
             else:
                 raise RegisterError(
-                    "Please enter an email, username, name, and password"
+                    "Veuillez accepter les conditions générale d'utilisation"
                 )
 
     def _set_random_password(self, username: str) -> str:
@@ -476,7 +525,11 @@ class Authenticate:
         ).generate()[0]
         return self.random_password
 
-    def forgot_password(self, form_name: str, location: str = "main") -> tuple:
+    def forgot_password(
+        self,
+        form_name: str = "Mot de passe oublié",
+        location: str = "main",
+    ) -> tuple:
         """
         Creates a forgot password widget.
 
@@ -498,14 +551,14 @@ class Authenticate:
         if location not in ["main", "sidebar"]:
             raise ValueError("Location must be one of 'main' or 'sidebar'")
         if location == "main":
-            forgot_password_form = st.form("Forgot password")
+            forgot_password_form = st.form("Mot de passe oublié")
         elif location == "sidebar":
-            forgot_password_form = st.sidebar.form("Forgot password")
+            forgot_password_form = st.sidebar.form("Mot de passe oublié")
 
         forgot_password_form.subheader(form_name)
-        username = forgot_password_form.text_input("Username").lower()
+        username = forgot_password_form.text_input("Nom d'utilisateur").lower()
 
-        if forgot_password_form.form_submit_button("Submit"):
+        if forgot_password_form.form_submit_button("Soumettre"):
             if len(username) > 0:
                 if username in self.credentials["usernames"]:
                     return (
@@ -516,7 +569,7 @@ class Authenticate:
                 else:
                     return False, None, None
             else:
-                raise ForgotError("Username not provided")
+                raise ForgotError("Nom d'utilisateur non fourni.")
         return None, None, None
 
     def _get_username(self, key: str, value: str) -> str:
@@ -539,7 +592,11 @@ class Authenticate:
                 return username
         return False
 
-    def forgot_username(self, form_name: str, location: str = "main") -> tuple:
+    def forgot_username(
+        self,
+        form_name: str = "Nom d'utilisateur oublié",
+        location: str = "main",
+    ) -> tuple:
         """
         Creates a forgot username widget.
 
@@ -559,18 +616,18 @@ class Authenticate:
         if location not in ["main", "sidebar"]:
             raise ValueError("Location must be one of 'main' or 'sidebar'")
         if location == "main":
-            forgot_username_form = st.form("Forgot username")
+            forgot_username_form = st.form("Nom d'utilisateur oublié")
         elif location == "sidebar":
-            forgot_username_form = st.sidebar.form("Forgot username")
+            forgot_username_form = st.sidebar.form("Nom d'utilisateur oublié")
 
         forgot_username_form.subheader(form_name)
         email = forgot_username_form.text_input("Email")
 
-        if forgot_username_form.form_submit_button("Submit"):
+        if forgot_username_form.form_submit_button("Soumettre"):
             if len(email) > 0:
                 return self._get_username("email", email), email
             else:
-                raise ForgotError("Email not provided")
+                raise ForgotError("Email non fourni")
         return None, email
 
     def _update_entry(self, username: str, key: str, value: str):
@@ -589,7 +646,10 @@ class Authenticate:
         self.credentials["usernames"][username][key] = value
 
     def update_user_details(
-        self, username: str, form_name: str, location: str = "main"
+        self,
+        username: str,
+        form_name: str = "Mettre à jour les détails de l'utilisateur.",
+        location: str = "main",
     ) -> bool:
         """
         Creates a update user details widget.
@@ -610,16 +670,22 @@ class Authenticate:
         if location not in ["main", "sidebar"]:
             raise ValueError("Location must be one of 'main' or 'sidebar'")
         if location == "main":
-            update_user_details_form = st.form("Update user details")
+            update_user_details_form = st.form(
+                "Mettre à jour les détails de l'utilisateur."
+            )
         elif location == "sidebar":
-            update_user_details_form = st.sidebar.form("Update user details")
+            update_user_details_form = st.sidebar.form(
+                "Mettre à jour les détails de l'utilisateur."
+            )
 
         update_user_details_form.subheader(form_name)
         self.username = username.lower()
-        field = update_user_details_form.selectbox("Field", ["Name", "Email"]).lower()
-        new_value = update_user_details_form.text_input("New value")
+        field = update_user_details_form.selectbox(
+            "Champ", ["Nom d'utilisateur", "Email"]
+        )
+        new_value = update_user_details_form.text_input("Nouvelle valeur")
 
-        if update_user_details_form.form_submit_button("Update"):
+        if update_user_details_form.form_submit_button("Mettre à jour"):
             if len(new_value) > 0:
                 if new_value != self.credentials["usernames"][self.username][field]:
                     self._update_entry(self.username, field, new_value)
@@ -635,6 +701,8 @@ class Authenticate:
                         )
                     return True
                 else:
-                    raise UpdateError("New and current values are the same")
+                    raise UpdateError(
+                        "Les nouvelles valeurs et les valeurs actuelles sont identiques."
+                    )
             if len(new_value) == 0:
-                raise UpdateError("New value not provided")
+                raise UpdateError("Nouvelle valeur non fournie.")
