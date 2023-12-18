@@ -1,3 +1,7 @@
 streamlit_authenticator/__pycache__
 /test
 graphics/logo.pptx
+
+build*
+
+streamlit_authenticator*

@@ -8,7 +8,10 @@ setuptools.setup(
     version="0.2.3",
     author="Mohammad Khorasani",
     author_email="khorasani.mohammad@gmail.com",
-    description="A secure authentication module to validate user credentials in a Streamlit application.",
+    description="""
+    A secure authentication module to validate user credentials in a
+    Streamlit application.
+    """,
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/mkhorasani/Streamlit-Authenticator",
@@ -19,13 +22,14 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    keywords=['Python', 'Streamlit', 'Authentication', 'Components'],
+    keywords=["Python", "Streamlit", "Authentication", "Components"],
     python_requires=">=3.6",
     install_requires=[
         "PyJWT >=2.3.0",
         "bcrypt >= 3.1.7",
         "PyYAML >= 5.3.1",
         "streamlit >= 1.18.0",
-        "extra-streamlit-components >= 0.1.60"
+        "extra-streamlit-components >= 0.1.60",
+        "loguru >= 0.7.2",
     ],
 )
