@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="streamlit-authenticator",
-    version="0.3.0",
+    version="0.3.1",
     author="Mohammad Khorasani",
     author_email="khorasani.mohammad@gmail.com",
     description="""
