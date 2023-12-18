@@ -6,7 +6,7 @@ from .authenticate import Authenticate
 
 _RELEASE = True
 
-if _RELEASE:
+if not _RELEASE:
     # Loading config file
     with open("config.yaml") as file:
         config = yaml.load(file, Loader=SafeLoader)
